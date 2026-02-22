@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Voice AI (Local)</title>
+    <style>
+      body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 24px; }
+      .row { display: flex; gap: 12px; }
+      textarea { width: 100%; height: 110px; padding: 10px; }
+      button { padding: 10px 16px; cursor: pointer; }
+      .card { margin-top: 16px; padding: 12px; border: 1px solid #ddd; border-radius: 10px; }
+      .muted { color: #666; font-size: 13px; }
+    </style>
+  </head>
+  <body>
+    <h1>Voice AI (Local)</h1>
+    <p class="muted">/ask に投げて、音声（ElevenLabs） or テキストを返します。</p>
+
+    <div class="row">
+      <textarea id="q" placeholder="質問を入力"></textarea>
+      <div>
+        <button id="send">送信</button>
+        <div style="height:8px"></div>
+        <button id="stop">停止</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="muted">Assistant</div>
+      <div id="a" style="white-space:pre-wrap; margin-top:8px;"></div>
+      <div style="height:10px"></div>
+      <audio id="audio" controls style="width:100%"></audio>
+    </div>
+
+    <script>
+      const qEl = document.getElementById('q');
+      const aEl = document.getElementById('a');
+      const sendBtn = document.getElementById('send');
+      const stopBtn = document.getElementById('stop');
+      const audioEl = document.getElementById('audio');
+
+      let currentObjectUrl = null;
+
+      function setAnswer(text) {
+        aEl.textContent = text || '';
+      }
+
+      function setAudioFromBlob(blob) {
+        if (currentObjectUrl) URL.revokeObjectURL(currentObjectUrl);
+        currentObjectUrl = URL.createObjectURL(blob);
+        audioEl.src = currentObjectUrl;
+      }
+
+      async function ask() {
+        const question = qEl.value.trim();
+        if (!question) return;
+
+        sendBtn.disabled = true;
+        setAnswer('…');
+
+        try {
+          const r = await fetch(`/ask?ts=${Date.now()}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+            body: JSON.stringify({ question }),
+            cache: 'no-store',
+          });
+
+          const contentType = r.headers.get('content-type') || '';
+
+          if (!r.ok) {
+            const msg = await r.text().catch(() => '');
+            throw new Error(`HTTP ${r.status}: ${msg}`);
+          }
+
+          // Audio path
+          if (contentType.includes('audio')) {
+            const headerText = r.headers.get('x-assistant-text');
+            if (headerText) {
+              try { setAnswer(decodeURIComponent(headerText)); } catch { /* ignore */ }
+            } else {
+              setAnswer('(audio only)');
+            }
+
+            const blob = await r.blob();
+            setAudioFromBlob(blob);
+            await audioEl.play().catch(() => {});
+            return;
+          }
+
+          // JSON path
+          const data = await r.json();
+          setAnswer(data.answer || '');
+
+        } catch (e) {
+          setAnswer(`Error: ${e.message || e}`);
+        } finally {
+          sendBtn.disabled = false;
+        }
+      }
+
+      sendBtn.addEventListener('click', ask);
+      qEl.addEventListener('keydown', (e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') ask();
+      });
+
+      stopBtn.addEventListener('click', () => {
+        audioEl.pause();
+        audioEl.currentTime = 0;
+      });
+    </script>
+  </body>
+</html>
