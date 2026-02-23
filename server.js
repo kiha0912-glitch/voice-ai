@@ -1,4 +1,3 @@
-cat > server.js <<'EOF'
 const path = require("path");
 require("dotenv").config();
 
@@ -257,4 +256,3 @@ const PORT = process.env.PORT ? Number(process.env.PORT) : 3000;
 app.listen(PORT, () => {
   console.log(`✅ server running: http://localhost:${PORT}`);
 });
-EOF
