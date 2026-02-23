@@ -140,9 +140,8 @@ async function elevenTTS(text) {
   const tagged = toV3Tagged(text);
 
   const url =
-    `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(ELEVEN_VOICE_ID)}` +
-    `?output_format=mp3_44100_192` +
-    `&optimize_streaming_latency=0`;
+  `https://api.elevenlabs.io/v1/text-to-speech/${encodeURIComponent(ELEVEN_VOICE_ID)}` +
+  `?output_format=mp3_44100_192`;
 
   const r = await fetch(url, {
     method: "POST",
