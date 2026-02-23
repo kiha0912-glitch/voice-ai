@@ -125,24 +125,13 @@ ${fullText}
 function toV3Tagged(t) {
   let s = String(t || "").trim();
 
-  // タグを入れすぎると不自然になるので最小限
-  // 1) 冒頭の空気感
-  // 2) 途中に1回だけ間
-  // 3) 大事な一文を少し丁寧に
-  s = `[understated] ${s}`;
-
-  // 句点のうち2回だけ “間” を入れる（全部に入れない）
+  // 最小限だけ間を作る
   let count = 0;
   s = s.replace(/。/g, () => {
     count += 1;
     return count <= 2 ? "。[pause]" : "。";
   });
 
-  // “次の一手” の前を丁寧に
-  s = s.replace(/(まず|次は|一度|もし)/, "[deliberate] $1");
-
-  // 連続スペース整理
-  s = s.replace(/\s+/g, " ").trim();
   return s;
 }
 
@@ -166,7 +155,7 @@ async function elevenTTS(text) {
       model_id: ELEVEN_MODEL_ID,
       // v3はstability高すぎると“棒読み”に寄ることがあるので中間に
       voice_settings: {
-        stability: 0.52,
+        stability: 0.5,
         similarity_boost: 0.78,
         style: 0.28,
         use_speaker_boost: true,
