@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="light dark" />
+  <title>法律相談AI（越水はるか）</title>
+  <meta name="description" content="弁護士人格AI『越水はるか』監修の法律相談音声AI。落ち着いて整理しながら、一緒に状況を確認します。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+
+<body>
+  <div class="app">
+    <header class="topbar" role="banner">
+      <div class="brand">
+        <div class="brand__badge" aria-hidden="true">AI</div>
+        <div class="brand__text">
+          <div class="brand__title">法律相談AI</div>
+          <div class="brand__subtitle">越水 はるか（監修）</div>
+        </div>
+      </div>
+
+      <div class="topbar__right">
+        <span class="pill" id="connPill" aria-live="polite">接続確認中…</span>
+      </div>
+    </header>
+
+    <main class="main" role="main">
+      <section class="hero" aria-label="概要">
+        <div class="hero__left">
+          <h1 class="h1">落ち着いていきましょう。</h1>
+          <p class="lead">
+            まずは状況を一度、整理してみますね。焦らなくて大丈夫です。<br />
+            事実関係を確認しながら、次に取れる選択肢を一緒に見つけます。
+          </p>
+
+          <div class="notice" role="note" aria-label="ご注意">
+            <div class="notice__title">ご注意（大切）</div>
+            <ul class="notice__list">
+              <li>ここでの回答は一般的な情報であり、個別の法的助言ではありません。</li>
+              <li>緊急性（期限・差し迫った危険・逮捕等）がある場合は、専門家や公的窓口へ早めに相談してください。</li>
+              <li>入力内容は保存しません（ログ保存なし）。</li>
+            </ul>
+          </div>
+
+          <div class="chips" aria-label="例">
+            <button class="chip" data-preset="会社から急に解雇と言われました。まず何を確認すべきですか？">解雇</button>
+            <button class="chip" data-preset="家賃の未払いで立ち退きを求められています。どう整理すればいい？">賃貸</button>
+            <button class="chip" data-preset="ネットで誹謗中傷されています。対応の選択肢を知りたいです。">誹謗中傷</button>
+            <button class="chip" data-preset="離婚を考えています。親権や養育費の考え方を整理したいです。">離婚</button>
+          </div>
+        </div>
+
+        <aside class="profile" aria-label="監修者プロフィール">
+          <div class="profile__card">
+            <div class="profile__media">
+              <img
+                src="/profile-placeholder.png"
+                alt="監修者プロフィール画像（準備中）"
+                class="profile__img"
+                loading="lazy"
+              />
+            </div>
+            <div class="profile__body">
+              <div class="profile__name">越水 はるか</div>
+              <div class="profile__role">弁護士人格AI（監修）</div>
+              <div class="profile__desc">
+                法律相談は、焦りが強いほど判断が難しくなりがちです。<br />
+                まずは事実と論点を切り分け、現実的な選択肢を整理します。
+              </div>
+
+              <div class="profile__meta">
+                <div class="metaRow">
+                  <span class="metaLabel">応対</span>
+                  <span class="metaValue">落ち着き・知的／必要時のみ共感</span>
+                </div>
+                <div class="metaRow">
+                  <span class="metaLabel">音声</span>
+                  <span class="metaValue">ElevenLabs v3</span>
+                </div>
+                <div class="metaRow">
+                  <span class="metaLabel">プライバシー</span>
+                  <span class="metaValue">質問の保存なし</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="profile__hint" aria-label="入力のコツ">
+            <div class="hint__title">入力のコツ</div>
+            <ul class="hint__list">
+              <li>「いつ／誰が／何を／どの順で」起きたか</li>
+              <li>書面や証拠があれば、その有無（内容は伏せてOK）</li>
+              <li>期限があるか（例：通知から○日以内）</li>
+            </ul>
+          </div>
+        </aside>
+      </section>
+
+      <section class="chat" aria-label="相談チャット">
+        <div class="chat__header">
+          <div class="chat__title">相談</div>
+          <div class="chat__actions">
+            <button class="ghost" id="btnClear" type="button">会話をクリア</button>
+          </div>
+        </div>
+
+        <div class="chat__log" id="log" aria-live="polite" aria-relevant="additions">
+          <div class="msg msg--ai">
+            <div class="bubble">
+              <div class="bubble__name">越水はるか</div>
+              <div class="bubble__text">
+                こんにちは。落ち着いていきましょう。<br />
+                まずは、何が起きているか教えてください。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <form class="chat__composer" id="form">
+          <label class="srOnly" for="q">相談内容</label>
+          <textarea
+            id="q"
+            name="q"
+            class="composer__input"
+            placeholder="例：会社から突然解雇と言われ、理由が曖昧です。雇用契約書はあります。通知は口頭のみ…"
+            rows="3"
+            maxlength="2000"
+            required
+          ></textarea>
+
+          <div class="composer__row">
+            <div class="composer__left">
+              <span class="small" id="count">0 / 2000</span>
+              <span class="small small--muted">※個人情報（氏名・住所・電話等）は入れないでください</span>
+            </div>
+            <div class="composer__right">
+              <button class="btn" id="btnSend" type="submit">
+                <span class="btn__dot" aria-hidden="true"></span>
+                相談する
+              </button>
+            </div>
+          </div>
+
+          <div class="composer__error" id="err" role="alert" hidden></div>
+        </form>
+
+        <div class="player" aria-label="音声再生">
+          <div class="player__left">
+            <div class="player__label">音声</div>
+            <div class="player__sub">回答が生成されると、ここで再生できます</div>
+          </div>
+          <div class="player__right">
+            <audio id="audio" controls preload="none"></audio>
+          </div>
+        </div>
+      </section>
+
+      <footer class="footer" role="contentinfo">
+        <div class="footer__left">
+          <span class="small">© 法律相談AI（越水はるか）</span>
+        </div>
+        <div class="footer__right">
+          <span class="small small--muted">内部エラー詳細は表示しません／質問は保存しません</span>
+        </div>
+      </footer>
+    </main>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

@@ -4,3 +4,6 @@ node_modules/
 out.mp3
 server_old.js
 *.bak
+
+# local backups
+backups/
