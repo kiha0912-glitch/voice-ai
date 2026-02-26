@@ -3,14 +3,14 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>法律相談AI（越水はるか）</title>
+  <title>AI越水はるかβ版</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <div class="topbar">
     <div class="topbar__left">
       <div class="brand">
-        <div class="brand__title">法律相談AI</div>
+        <div class="brand__title">AI越水はるか</div>
         <div class="brand__sub">越水 はるか（監修）</div>
       </div>
     </div>
@@ -30,15 +30,16 @@
       </div>
 
       <p class="profile__desc">
-        法律相談は、焦りが強いほど判断が難しくなりがちです。<br/>
-        まずは事実と論点を切り分け、現実的な選択肢を整理します。
+        本サービスは法律相談を提供するものではなく<br/>
+        法律知識の整理および一般的情報提供を目的としています。
       </p>
 
       <div class="notice">
         <div class="notice__title">ご注意（大切）</div>
         <ul class="notice__list">
           <li>ここでの回答は一般的な情報であり、個別の法的助言ではありません。</li>
-          <li>緊急性（期限・差し迫った危険・逮捕等）がある場合は、専門家や公的窓口へ早めに相談してください。</li>
+          <li>具体的な判断は、専門家や公的窓口へ早めに相談してください。
+            実際の意思決定はご自身の責任において行ってください。</li>
           <li>入力内容は保存しません（ログ保存なし）。</li>
         </ul>
       </div>
@@ -46,7 +47,7 @@
 
     <section class="card main">
       <div class="main__head">
-        <div class="main__title">相談</div>
+        <div class="main__title">相談チャット</div>
         <button id="btnClear" class="btn btn--ghost" type="button">会話をクリア</button>
       </div>
 
@@ -56,15 +57,16 @@
         <div class="msg msg--ai">
           <div class="msg__role">越水はるか</div>
           <div class="msg__body">
-            こんにちは。状況を整理しながら進めます。<br/>
-            まずは「いつ／誰が／何を／どの順で」起きたかを教えてください。
+            こんにちは。<br/>
+            AI越水はるかに聞いてみたい内容をご記入ください。
+          
           </div>
         </div>
       </div>
 
       <form id="form" class="composer">
         <textarea id="q" class="composer__input" rows="3"
-          placeholder="例）会社から突然解雇と言われました。理由が曖昧です。通知は口頭のみ。"
+          placeholder="例）一般的にどこからがパワハラと言われますか？"
           maxlength="2000" required></textarea>
 
         <div class="composer__bottom">
