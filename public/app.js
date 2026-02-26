@@ -8,15 +8,11 @@
   const count = $("count");
   const err = $("err");
   const btnClear = $("btnClear");
-  const audio = $("audio");
+  const spinner = $("spinner");
 
-  document.querySelectorAll(".chip").forEach((b) => {
-    b.addEventListener("click", () => {
-      q.value = b.getAttribute("data-preset") || "";
-      q.focus();
-      updateCount();
-    });
-  });
+  const audio = $("audio");
+  const btnPlay = $("btnPlay");
+  const audioTime = $("audioTime");
 
   function updateCount() {
     const n = (q.value || "").length;
@@ -49,33 +45,62 @@
       .replaceAll("'", "&#039;");
   }
 
-  function addMsg(role, name, htmlText) {
-    const wrap = document.createElement("div");
-    wrap.className = `msg msg--${role}`;
+  function fmtTime(sec) {
+    if (!isFinite(sec) || sec < 0) return "--:--";
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${m}:${String(s).padStart(2, "0")}`;
+  }
 
-    const bubble = document.createElement("div");
-    bubble.className = "bubble";
-
-    if (name) {
-      const nm = document.createElement("div");
-      nm.className = "bubble__name";
-      nm.textContent = name;
-      bubble.appendChild(nm);
-    }
-
-    const tx = document.createElement("div");
-    tx.className = "bubble__text";
-    tx.innerHTML = htmlText;
-    bubble.appendChild(tx);
-
-    wrap.appendChild(bubble);
-    log.appendChild(wrap);
-    log.scrollTop = log.scrollHeight;
+  function resetAudioUI() {
+    audio.pause();
+    audio.removeAttribute("src");
+    btnPlay.disabled = true;
+    btnPlay.textContent = "▶ 再生";
+    audioTime.textContent = "--:--";
   }
 
   function setBusy(on) {
     form.querySelectorAll("button, textarea, input").forEach((el) => (el.disabled = on));
-    form.dataset.busy = on ? "1" : "0";
+    spinner.hidden = !on;
+  }
+
+  function addCard(role, name, htmlText, fullHtmlText) {
+    const wrap = document.createElement("div");
+    wrap.className = `msg msg--${role}`;
+
+    const roleEl = document.createElement("div");
+    roleEl.className = "msg__role";
+    roleEl.textContent = name || (role === "ai" ? "越水はるか" : "相談者");
+    wrap.appendChild(roleEl);
+
+    const body = document.createElement("div");
+    body.className = "msg__body";
+    body.innerHTML = htmlText;
+    wrap.appendChild(body);
+
+    if (role === "ai" && fullHtmlText && fullHtmlText !== htmlText) {
+      const more = document.createElement("button");
+      more.type = "button";
+      more.className = "more";
+      more.textContent = "全文を表示（タップ）";
+
+      const full = document.createElement("div");
+      full.className = "full";
+      full.hidden = true;
+      full.innerHTML = fullHtmlText;
+
+      more.addEventListener("click", () => {
+        full.hidden = !full.hidden;
+        more.textContent = full.hidden ? "全文を表示（タップ）" : "全文を隠す";
+      });
+
+      wrap.appendChild(more);
+      wrap.appendChild(full);
+    }
+
+    log.appendChild(wrap);
+    log.scrollTop = log.scrollHeight;
   }
 
   async function health() {
@@ -91,8 +116,7 @@
   async function ask(question) {
     setBusy(true);
     showError("");
-    audio.pause();
-    audio.removeAttribute("src");
+    resetAudioUI();
 
     try {
       const r = await fetch("/api/ask-audio", {
@@ -105,14 +129,21 @@
       const data = await r.json();
 
       const voice = data.voiceText || "（回答の生成に失敗しました）";
-      addMsg("ai", "越水はるか", escapeHtml(voice).replaceAll("\n", "<br />"));
+      const full = data.fullText || voice;
+
+      const voiceHtml = escapeHtml(voice).replaceAll("\n", "<br />");
+      const fullHtml = escapeHtml(full).replaceAll("\n", "<br />");
+
+      addCard("ai", "越水はるか", voiceHtml, fullHtml);
 
       if (data.audioBase64) {
         audio.src = "data:audio/mpeg;base64," + data.audioBase64;
+        btnPlay.disabled = false;
       }
+
       setBusy(false);
     } catch {
-      addMsg("ai", "越水はるか", "通信に失敗しました。時間をおいてもう一度お試しください。");
+      addCard("ai", "越水はるか", "通信に失敗しました。時間をおいてもう一度お試しください。");
       showError("通信に失敗しました。");
       setBusy(false);
     }
@@ -122,7 +153,8 @@
     ev.preventDefault();
     const question = (q.value || "").trim();
     if (!question) return;
-    addMsg("user", "相談者", escapeHtml(question).replaceAll("\n", "<br />"));
+
+    addCard("user", "相談者", escapeHtml(question).replaceAll("\n", "<br />"));
     q.value = "";
     updateCount();
     ask(question);
@@ -131,9 +163,35 @@
   btnClear.addEventListener("click", () => {
     const msgs = Array.from(log.querySelectorAll(".msg"));
     msgs.slice(1).forEach((m) => m.remove());
-    audio.pause();
-    audio.removeAttribute("src");
+    resetAudioUI();
     showError("");
+  });
+
+  btnPlay.addEventListener("click", async () => {
+    if (!audio.src) return;
+    try {
+      if (audio.paused) {
+        await audio.play();
+      } else {
+        audio.pause();
+      }
+    } catch {}
+  });
+
+  audio.addEventListener("play", () => {
+    btnPlay.textContent = "⏸ 停止";
+  });
+  audio.addEventListener("pause", () => {
+    btnPlay.textContent = "▶ 再生";
+  });
+  audio.addEventListener("loadedmetadata", () => {
+    audioTime.textContent = fmtTime(audio.duration);
+  });
+  audio.addEventListener("timeupdate", () => {
+    // “バー”は出さないが、完了感のために残り秒だけ更新
+    if (isFinite(audio.duration) && audio.duration > 0) {
+      audioTime.textContent = fmtTime(audio.duration);
+    }
   });
 
   health();
