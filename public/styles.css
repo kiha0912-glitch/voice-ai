@@ -315,3 +315,16 @@ body{
   padding:0;
   color:var(--muted);
 }
+
+
+/* 入力欄を常に下に固定（邪魔にならない） */
+.main{ display:flex; flex-direction:column; }
+.log{ flex:1; height:auto; min-height:48vh; }
+.composer{
+  position: sticky;
+  bottom: 0;
+  z-index: 5;
+  backdrop-filter: blur(8px);
+  background: rgba(5,11,20,.78);
+  border-top: 1px solid rgba(255,255,255,.10);
+}

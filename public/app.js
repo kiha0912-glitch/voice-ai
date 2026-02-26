@@ -51,6 +51,10 @@
     return `${m}:${String(s).padStart(2, "0")}`;
   }
 
+  function scrollToBottom() {
+    log.scrollTop = log.scrollHeight;
+  }
+
   function resetAudio() {
     audio.pause();
     audio.removeAttribute("src");
@@ -58,7 +62,6 @@
     if (currentVoiceUI) {
       currentVoiceUI.btn.textContent = "▶";
       currentVoiceUI.wrap.classList.remove("voice--playing");
-      currentVoiceUI.time.textContent = "--:--";
     }
   }
 
@@ -67,65 +70,56 @@
     spinner.hidden = !on;
   }
 
-  function addCard(role, name, htmlText, fullHtmlText) {
+  // --- Cards ---
+  function mkWrap(role) {
     const wrap = document.createElement("div");
     wrap.className = `msg msg--${role}`;
+    return wrap;
+  }
 
-    // avatar (AIのみ)
-    if (role === "ai") {
-      const av = document.createElement("div");
-      av.className = "msg__avatar";
-      const img = document.createElement("img");
-      img.src = "/haruka-icon.png";
-      img.alt = "越水はるか";
-      av.appendChild(img);
-      wrap.appendChild(av);
-    }
+  function addUserCard(text) {
+    const wrap = mkWrap("user");
+    const content = document.createElement("div");
+    content.className = "msg__content";
+
+    const roleEl = document.createElement("div");
+    roleEl.className = "msg__role";
+    roleEl.textContent = "相談者";
+    content.appendChild(roleEl);
+
+    const body = document.createElement("div");
+    body.className = "msg__body";
+    body.innerHTML = escapeHtml(text).replaceAll("\n", "<br />");
+    content.appendChild(body);
+
+    wrap.appendChild(content);
+    log.appendChild(wrap);
+    scrollToBottom();
+  }
+
+  // AI：初期表示は “ボイスだけ”。テキストはボタンで開く
+  function addAiCardVoiceOnly(fullText, audioBase64) {
+    const wrap = mkWrap("ai");
+
+    const av = document.createElement("div");
+    av.className = "msg__avatar";
+    const img = document.createElement("img");
+    img.src = "/haruka-icon.png";
+    img.alt = "越水はるか";
+    av.appendChild(img);
+    wrap.appendChild(av);
 
     const content = document.createElement("div");
     content.className = "msg__content";
 
     const roleEl = document.createElement("div");
     roleEl.className = "msg__role";
-    roleEl.textContent = name || (role === "ai" ? "越水はるか" : "相談者");
+    roleEl.textContent = "越水はるか";
     content.appendChild(roleEl);
 
-    const body = document.createElement("div");
-    body.className = "msg__body";
-    body.innerHTML = htmlText;
-    content.appendChild(body);
-
-    wrap.appendChild(content);
-
-    if (role === "ai" && fullHtmlText && fullHtmlText !== htmlText) {
-      const more = document.createElement("button");
-      more.type = "button";
-      more.className = "more";
-      more.textContent = "全文を表示（タップ）";
-
-      const full = document.createElement("div");
-      full.className = "full";
-      full.hidden = true;
-      full.innerHTML = fullHtmlText;
-
-      more.addEventListener("click", () => {
-        full.hidden = !full.hidden;
-        more.textContent = full.hidden ? "全文を表示（タップ）" : "全文を隠す";
-      });
-
-      wrap.appendChild(more);
-      wrap.appendChild(full);
-    }
-
-    log.appendChild(wrap);
-    log.scrollTop = log.scrollHeight;
-    return wrap;
-  }
-
-  // LINEっぽい音声バブルを追加（AI発話に紐づけ）
-  function addVoiceBubble(afterEl) {
-    const wrap = document.createElement("div");
-    wrap.className = "voice";
+    // ① ボイスバブル
+    const voiceWrap = document.createElement("div");
+    voiceWrap.className = "voice";
 
     const btn = document.createElement("button");
     btn.type = "button";
@@ -145,14 +139,64 @@
     time.className = "voice__time";
     time.textContent = "--:--";
 
-    wrap.appendChild(btn);
-    wrap.appendChild(bars);
-    wrap.appendChild(time);
+    voiceWrap.appendChild(btn);
+    voiceWrap.appendChild(bars);
+    voiceWrap.appendChild(time);
+    content.appendChild(voiceWrap);
 
-    afterEl.appendChild(wrap);
+    // ② 「テキストで表示」ボタン
+    const toggle = document.createElement("button");
+    toggle.type = "button";
+    toggle.className = "more";
+    toggle.textContent = "テキストで表示（タップ）";
+    content.appendChild(toggle);
 
-    currentVoiceUI = { wrap, btn, time };
-    return currentVoiceUI;
+    // ③ テキスト（最初は非表示）
+    const full = document.createElement("div");
+    full.className = "full";
+    full.hidden = true;
+    full.innerHTML = escapeHtml(fullText).replaceAll("\n", "<br />");
+    content.appendChild(full);
+
+    toggle.addEventListener("click", () => {
+      full.hidden = !full.hidden;
+      toggle.textContent = full.hidden ? "テキストで表示（タップ）" : "テキストを隠す";
+      scrollToBottom();
+    });
+
+    wrap.appendChild(content);
+    log.appendChild(wrap);
+    scrollToBottom();
+
+    // audio setup
+    if (audioBase64) {
+      resetAudio();
+      currentVoiceUI = { wrap: voiceWrap, btn, time };
+      audio.src = "data:audio/mpeg;base64," + audioBase64;
+
+      audio.addEventListener("loadedmetadata", () => {
+        time.textContent = fmtTime(audio.duration);
+      }, { once: true });
+
+      btn.addEventListener("click", async () => {
+        try {
+          if (audio.paused) {
+            await audio.play();
+            btn.textContent = "⏸";
+            voiceWrap.classList.add("voice--playing");
+          } else {
+            audio.pause();
+            btn.textContent = "▶";
+            voiceWrap.classList.remove("voice--playing");
+          }
+        } catch {}
+      });
+
+      audio.addEventListener("ended", () => {
+        btn.textContent = "▶";
+        voiceWrap.classList.remove("voice--playing");
+      }, { once: true });
+    }
   }
 
   async function health() {
@@ -168,7 +212,6 @@
   async function ask(question) {
     setBusy(true);
     showError("");
-    resetAudio();
 
     try {
       const r = await fetch("/api/ask-audio", {
@@ -179,49 +222,13 @@
       if (!r.ok) throw new Error("bad");
       const data = await r.json();
 
-      const voice = data.voiceText || "（回答の生成に失敗しました）";
-      const full = data.fullText || voice;
-
-      const voiceHtml = escapeHtml(voice).replaceAll("\n", "<br />");
-      const fullHtml = escapeHtml(full).replaceAll("\n", "<br />");
-
-      const aiCard = addCard("ai", "越水はるか", voiceHtml, fullHtml);
-
-      if (data.audioBase64) {
-        // バブルを表示
-        const ui = addVoiceBubble(aiCard);
-
-        audio.src = "data:audio/mpeg;base64," + data.audioBase64;
-
-        audio.addEventListener("loadedmetadata", () => {
-          ui.time.textContent = fmtTime(audio.duration);
-        }, { once: true });
-
-        ui.btn.addEventListener("click", async () => {
-          try {
-            if (audio.paused) {
-              await audio.play();
-              ui.btn.textContent = "⏸";
-              ui.wrap.classList.add("voice--playing");
-            } else {
-              audio.pause();
-              ui.btn.textContent = "▶";
-              ui.wrap.classList.remove("voice--playing");
-            }
-          } catch {}
-        });
-
-        audio.addEventListener("ended", () => {
-          ui.btn.textContent = "▶";
-          ui.wrap.classList.remove("voice--playing");
-        }, { once: true });
-      }
+      const fullText = (data.fullText || data.voiceText || "（回答の生成に失敗しました）").trim();
+      addAiCardVoiceOnly(fullText, data.audioBase64);
 
     } catch {
-      addCard("ai", "越水はるか", "通信に失敗しました。時間をおいてもう一度お試しください。");
+      addAiCardVoiceOnly("通信に失敗しました。時間をおいてもう一度お試しください。", null);
       showError("通信に失敗しました。");
     } finally {
-      // ← これで「ぐるぐる残る」事故を確実に止める
       setBusy(false);
     }
   }
@@ -231,9 +238,13 @@
     const question = (q.value || "").trim();
     if (!question) return;
 
-    addCard("user", "相談者", escapeHtml(question).replaceAll("\n", "<br />"));
+    addUserCard(question);
     q.value = "";
     updateCount();
+
+    // 送信後：入力欄は常に下（sticky）、かつフォーカス戻す
+    q.focus();
+
     ask(question);
   });
 
@@ -242,6 +253,7 @@
     msgs.slice(1).forEach((m) => m.remove());
     resetAudio();
     showError("");
+    q.focus();
   });
 
   health();
