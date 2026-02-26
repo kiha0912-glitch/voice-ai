@@ -20,7 +20,6 @@
   </div>
 
   <main class="layout">
-    <!-- 監修者カード -->
     <aside class="card profile">
       <div class="profile__row">
         <img class="profile__img" src="/profile-placeholder.png" alt="監修者" />
@@ -35,12 +34,6 @@
         まずは事実と論点を切り分け、現実的な選択肢を整理します。
       </p>
 
-      <dl class="kv">
-        <div><dt>応対</dt><dd>落ち着き・知的／必要時のみ共感</dd></div>
-        <div><dt>音声</dt><dd>ElevenLabs v3</dd></div>
-        <div><dt>プライバシー</dt><dd>質問の保存なし</dd></div>
-      </dl>
-
       <div class="notice">
         <div class="notice__title">ご注意（大切）</div>
         <ul class="notice__list">
@@ -51,7 +44,6 @@
       </div>
     </aside>
 
-    <!-- 相談エリア -->
     <section class="card main">
       <div class="main__head">
         <div class="main__title">相談</div>
@@ -88,14 +80,8 @@
         </div>
       </form>
 
-      <div class="audio">
-        <div class="audio__label">音声</div>
-        <div class="audio__row">
-          <button id="btnPlay" class="btn btn--ghost" type="button" disabled>▶ 再生</button>
-          <div id="audioTime" class="audio__time">--:--</div>
-        </div>
-        <audio id="audio" preload="metadata"></audio>
-      </div>
+      <!-- 音声再生用（UIはチャット内に出す） -->
+      <audio id="audio" preload="metadata"></audio>
     </section>
   </main>
 

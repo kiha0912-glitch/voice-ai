@@ -11,8 +11,7 @@
   const spinner = $("spinner");
 
   const audio = $("audio");
-  const btnPlay = $("btnPlay");
-  const audioTime = $("audioTime");
+  let currentVoiceUI = null;
 
   function updateCount() {
     const n = (q.value || "").length;
@@ -52,12 +51,15 @@
     return `${m}:${String(s).padStart(2, "0")}`;
   }
 
-  function resetAudioUI() {
+  function resetAudio() {
     audio.pause();
     audio.removeAttribute("src");
-    btnPlay.disabled = true;
-    btnPlay.textContent = "▶ 再生";
-    audioTime.textContent = "--:--";
+    audio.load();
+    if (currentVoiceUI) {
+      currentVoiceUI.btn.textContent = "▶";
+      currentVoiceUI.wrap.classList.remove("voice--playing");
+      currentVoiceUI.time.textContent = "--:--";
+    }
   }
 
   function setBusy(on) {
@@ -101,6 +103,40 @@
 
     log.appendChild(wrap);
     log.scrollTop = log.scrollHeight;
+    return wrap;
+  }
+
+  // LINEっぽい音声バブルを追加（AI発話に紐づけ）
+  function addVoiceBubble(afterEl) {
+    const wrap = document.createElement("div");
+    wrap.className = "voice";
+
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "voice__btn";
+    btn.textContent = "▶";
+
+    const bars = document.createElement("div");
+    bars.className = "voice__bars";
+    for (let i = 0; i < 20; i++) {
+      const b = document.createElement("span");
+      b.className = "voice__bar";
+      b.style.height = `${8 + (i % 5) * 4}px`;
+      bars.appendChild(b);
+    }
+
+    const time = document.createElement("div");
+    time.className = "voice__time";
+    time.textContent = "--:--";
+
+    wrap.appendChild(btn);
+    wrap.appendChild(bars);
+    wrap.appendChild(time);
+
+    afterEl.appendChild(wrap);
+
+    currentVoiceUI = { wrap, btn, time };
+    return currentVoiceUI;
   }
 
   async function health() {
@@ -116,7 +152,7 @@
   async function ask(question) {
     setBusy(true);
     showError("");
-    resetAudioUI();
+    resetAudio();
 
     try {
       const r = await fetch("/api/ask-audio", {
@@ -124,7 +160,6 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question }),
       });
-
       if (!r.ok) throw new Error("bad");
       const data = await r.json();
 
@@ -134,17 +169,43 @@
       const voiceHtml = escapeHtml(voice).replaceAll("\n", "<br />");
       const fullHtml = escapeHtml(full).replaceAll("\n", "<br />");
 
-      addCard("ai", "越水はるか", voiceHtml, fullHtml);
+      const aiCard = addCard("ai", "越水はるか", voiceHtml, fullHtml);
 
       if (data.audioBase64) {
+        // バブルを表示
+        const ui = addVoiceBubble(aiCard);
+
         audio.src = "data:audio/mpeg;base64," + data.audioBase64;
-        btnPlay.disabled = false;
+
+        audio.addEventListener("loadedmetadata", () => {
+          ui.time.textContent = fmtTime(audio.duration);
+        }, { once: true });
+
+        ui.btn.addEventListener("click", async () => {
+          try {
+            if (audio.paused) {
+              await audio.play();
+              ui.btn.textContent = "⏸";
+              ui.wrap.classList.add("voice--playing");
+            } else {
+              audio.pause();
+              ui.btn.textContent = "▶";
+              ui.wrap.classList.remove("voice--playing");
+            }
+          } catch {}
+        });
+
+        audio.addEventListener("ended", () => {
+          ui.btn.textContent = "▶";
+          ui.wrap.classList.remove("voice--playing");
+        }, { once: true });
       }
 
-      setBusy(false);
     } catch {
       addCard("ai", "越水はるか", "通信に失敗しました。時間をおいてもう一度お試しください。");
       showError("通信に失敗しました。");
+    } finally {
+      // ← これで「ぐるぐる残る」事故を確実に止める
       setBusy(false);
     }
   }
@@ -163,35 +224,8 @@
   btnClear.addEventListener("click", () => {
     const msgs = Array.from(log.querySelectorAll(".msg"));
     msgs.slice(1).forEach((m) => m.remove());
-    resetAudioUI();
+    resetAudio();
     showError("");
-  });
-
-  btnPlay.addEventListener("click", async () => {
-    if (!audio.src) return;
-    try {
-      if (audio.paused) {
-        await audio.play();
-      } else {
-        audio.pause();
-      }
-    } catch {}
-  });
-
-  audio.addEventListener("play", () => {
-    btnPlay.textContent = "⏸ 停止";
-  });
-  audio.addEventListener("pause", () => {
-    btnPlay.textContent = "▶ 再生";
-  });
-  audio.addEventListener("loadedmetadata", () => {
-    audioTime.textContent = fmtTime(audio.duration);
-  });
-  audio.addEventListener("timeupdate", () => {
-    // “バー”は出さないが、完了感のために残り秒だけ更新
-    if (isFinite(audio.duration) && audio.duration > 0) {
-      audioTime.textContent = fmtTime(audio.duration);
-    }
   });
 
   health();
