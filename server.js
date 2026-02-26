@@ -1,5 +1,4 @@
 const path = require("path");
-const path = require("path");
 require("dotenv").config();
 
 const express = require("express");
@@ -11,7 +10,14 @@ const { searchChunks, buildRagContext } = require("./rag");
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
-app.use(express.static(path.join(__dirname, "public"))); // index.html配信
+app.use(express.static(path.join(__dirname, "public")));
+
+// ヘルスチェック
+app.get("/api/health", (req, res) => {
+  res.setHeader("Cache-Control", "no-store");
+  res.json({ ok: true });
+});
+ // index.html配信
 
 // ===== OpenAI =====
 if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is missing in .env");
@@ -208,7 +214,7 @@ app.post("/api/ask", async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     res.json({ text });
   } catch (e) {
-    res.status(500).json({ error: String(e) });
+    res.status(500).json({ error: "internal_error" });
   }
 });
 
@@ -222,7 +228,41 @@ app.post("/api/voice-script", async (req, res) => {
     res.setHeader("Cache-Control", "no-store");
     res.json({ voiceText, fullText });
   } catch (e) {
-    res.status(500).json({ error: String(e) });
+    res.status(500).json({ error: "internal_error" });
+  }
+});
+
+// UI用：テキスト＋音声をまとめて返す（JSON）
+app.post("/api/ask-audio", async (req, res) => {
+  try {
+    const q = String(req.body?.question || "").trim();
+    if (!q) return res.status(400).json({ error: "question is required" });
+
+    // ファン対応（音声で返す）
+    const c = detectCompliment(q);
+    if (c) {
+      const audio = await elevenTTS(c.voiceText);
+      res.setHeader("Cache-Control", "no-store");
+      return res.json({
+        voiceText: c.voiceText,
+        fullText: c.voiceText,
+        audioBase64: audio.toString("base64"),
+      });
+    }
+
+    const fullText = await askOpenAIText(q);
+    const voiceText = await askOpenAIVoice(q, fullText);
+    const audio = await elevenTTS(voiceText);
+
+    res.setHeader("Cache-Control", "no-store");
+    res.json({
+      voiceText,
+      fullText,
+      audioBase64: audio.toString("base64"),
+    });
+  } catch (e) {
+    // 内部エラー詳細は外に出さない
+    res.status(500).json({ error: "internal_error" });
   }
 });
 
@@ -248,7 +288,7 @@ app.post("/ask", async (req, res) => {
 
     res.send(audio);
   } catch (e) {
-    res.status(500).json({ error: String(e) });
+    res.status(500).json({ error: "internal_error" });
   }
 });
 

@@ -1,6 +1,4 @@
-python - <<'PY'
-from pathlib import Path
-Path("public/styles.css").write_text(r'''/* Calm, intellectual, lightweight UI */
+/* Calm, intellectual, lightweight UI */
 :root{
   --bg0: #0b1220;
   --bg1: #0f172a;
@@ -247,6 +245,3 @@ audio{width:100%}
   color: var(--muted2);
   line-height:1.6;
 }
-''', encoding="utf-8")
-print("✅ wrote public/styles.css")
-PY
