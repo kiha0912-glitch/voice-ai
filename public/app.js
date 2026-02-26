@@ -71,15 +71,31 @@
     const wrap = document.createElement("div");
     wrap.className = `msg msg--${role}`;
 
+    // avatar (AIのみ)
+    if (role === "ai") {
+      const av = document.createElement("div");
+      av.className = "msg__avatar";
+      const img = document.createElement("img");
+      img.src = "/haruka-icon.png";
+      img.alt = "越水はるか";
+      av.appendChild(img);
+      wrap.appendChild(av);
+    }
+
+    const content = document.createElement("div");
+    content.className = "msg__content";
+
     const roleEl = document.createElement("div");
     roleEl.className = "msg__role";
     roleEl.textContent = name || (role === "ai" ? "越水はるか" : "相談者");
-    wrap.appendChild(roleEl);
+    content.appendChild(roleEl);
 
     const body = document.createElement("div");
     body.className = "msg__body";
     body.innerHTML = htmlText;
-    wrap.appendChild(body);
+    content.appendChild(body);
+
+    wrap.appendChild(content);
 
     if (role === "ai" && fullHtmlText && fullHtmlText !== htmlText) {
       const more = document.createElement("button");
