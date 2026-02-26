@@ -1,4 +1,3 @@
-const path = require("path");
 require("dotenv").config();
 
 const express = require("express");
@@ -10,7 +9,11 @@ const { searchChunks, buildRagContext } = require("./rag");
 const app = express();
 app.use(cors());
 app.use(express.json({ limit: "2mb" }));
-app.use(express.static(path.join(__dirname, "public"))); // index.html配信
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+}); // index.html配信
 
 // ===== OpenAI =====
 if (!process.env.OPENAI_API_KEY) throw new Error("OPENAI_API_KEY is missing in .env");
