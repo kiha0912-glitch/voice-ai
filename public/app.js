@@ -55,6 +55,41 @@
     log.scrollTop = log.scrollHeight;
   }
 
+  // AIの「生成中…」をチャット内に表示して、後で消す
+  function addThinkingBubble() {
+    const wrap = mkWrap("ai");
+    const av = document.createElement("div");
+    av.className = "msg__avatar";
+    const img = document.createElement("img");
+    img.src = "/haruka-icon.png";
+    img.alt = "越水はるか";
+    av.appendChild(img);
+    wrap.appendChild(av);
+
+    const content = document.createElement("div");
+    content.className = "msg__content";
+
+    const roleEl = document.createElement("div");
+    roleEl.className = "msg__role";
+    roleEl.textContent = "越水はるか";
+    content.appendChild(roleEl);
+
+    const body = document.createElement("div");
+    body.className = "msg__body";
+    body.textContent = "回答を生成しています…";
+    content.appendChild(body);
+
+    wrap.appendChild(content);
+    wrap.dataset.thinking = "1";
+    log.appendChild(wrap);
+    scrollToBottom();
+    return wrap;
+  }
+
+  function removeThinkingBubble(node) {
+    try { if (node && node.parentNode) node.parentNode.removeChild(node); } catch {}
+  }
+
   function resetAudio() {
     audio.pause();
     audio.removeAttribute("src");
@@ -67,7 +102,8 @@
 
   function setBusy(on) {
     form.querySelectorAll("button, textarea, input").forEach((el) => (el.disabled = on));
-    spinner.hidden = !on;
+    // spinner は使わない（チャット内に表示する）
+    if (spinner) spinner.hidden = true;
   }
 
   // --- Cards ---
@@ -212,6 +248,7 @@
   async function ask(question) {
     setBusy(true);
     showError("");
+    const thinkingNode = addThinkingBubble();
 
     try {
       const r = await fetch("/api/ask-audio", {
@@ -222,13 +259,16 @@
       if (!r.ok) throw new Error("bad");
       const data = await r.json();
 
+      removeThinkingBubble(thinkingNode);
       const fullText = (data.fullText || data.voiceText || "（回答の生成に失敗しました）").trim();
       addAiCardVoiceOnly(fullText, data.audioBase64);
 
     } catch {
+      removeThinkingBubble(thinkingNode);
       addAiCardVoiceOnly("通信に失敗しました。時間をおいてもう一度お試しください。", null);
       showError("通信に失敗しました。");
     } finally {
+      removeThinkingBubble(thinkingNode);
       setBusy(false);
       const sp = document.getElementById('spinner');
       if (sp) sp.hidden = true;
