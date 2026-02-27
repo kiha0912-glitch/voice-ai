@@ -230,6 +230,8 @@
       showError("通信に失敗しました。");
     } finally {
       setBusy(false);
+      const sp = document.getElementById('spinner');
+      if (sp) sp.hidden = true;
     }
   }
 
