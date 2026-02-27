@@ -321,10 +321,37 @@ body{
 .main{ display:flex; flex-direction:column; }
 .log{ flex:1; height:auto; min-height:48vh; }
 .composer{
-  position: sticky;
+  /* sticky disabled */
   bottom: 0;
   z-index: 5;
   backdrop-filter: blur(8px);
   background: rgba(5,11,20,.78);
+  border-top: 1px solid rgba(255,255,255,.10);
+}
+
+
+/* ===== Composerを本当に下固定する ===== */
+.main{
+  display:flex;
+  flex-direction:column;
+  height: 100vh;
+}
+
+.log{
+  flex:1;
+  overflow-y:auto;
+  padding-bottom:120px; /* composer分の余白 */
+}
+
+.composer{
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  z-index: 50;
+  backdrop-filter: blur(8px);
+  background: rgba(5,11,20,.95);
   border-top: 1px solid rgba(255,255,255,.10);
 }
