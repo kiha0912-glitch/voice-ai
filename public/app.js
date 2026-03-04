@@ -123,6 +123,22 @@
       currentVoiceUI.wrap.classList.remove("voice--playing");
       if (currentVoiceUI.progressFill) currentVoiceUI.progressFill.style.width = "0%";
     }
+    currentVoiceUI = null;
+  }
+
+  // Load audio for a specific message (from stored base64)
+  function loadAudioForMessage(voiceWrap, audioBase64, ui) {
+    // Stop any currently playing audio
+    if (currentVoiceUI && currentVoiceUI !== ui) {
+      audio.pause();
+      if (currentVoiceUI.btn) currentVoiceUI.btn.innerHTML = playIcon;
+      if (currentVoiceUI.wrap) currentVoiceUI.wrap.classList.remove("voice--playing");
+      if (currentVoiceUI.progressFill) currentVoiceUI.progressFill.style.width = "0%";
+    }
+
+    // Load this message's audio
+    audio.src = "data:audio/mpeg;base64," + audioBase64;
+    currentVoiceUI = ui;
   }
 
   function setBusy(on) {
@@ -290,33 +306,53 @@
       voiceWrap.appendChild(track);
       content.appendChild(voiceWrap);
 
-      // Audio setup
-      resetAudio();
-      currentVoiceUI = { wrap: voiceWrap, btn, progressFill, timeCurrent, timeDuration };
-      audio.src = "data:audio/mpeg;base64," + audioBase64;
+      // UI object for this message
+      const ui = { wrap: voiceWrap, btn, progressFill, timeCurrent, timeDuration };
 
-      audio.addEventListener("loadedmetadata", () => {
-        timeDuration.textContent = fmtTime(audio.duration);
-      }, { once: true });
+      // Listen to audio events for duration and progress updates
+      const onLoadedMetadata = () => {
+        if (currentVoiceUI === ui) {
+          timeDuration.textContent = fmtTime(audio.duration);
+        }
+      };
 
-      // Progress update
-      audio.addEventListener("timeupdate", () => {
-        if (!audio.duration) return;
-        const pct = (audio.currentTime / audio.duration) * 100;
-        progressFill.style.width = pct + "%";
-        timeCurrent.textContent = fmtTime(audio.currentTime);
-      });
+      const onTimeUpdate = () => {
+        if (currentVoiceUI === ui && audio.duration) {
+          const pct = (audio.currentTime / audio.duration) * 100;
+          progressFill.style.width = pct + "%";
+          timeCurrent.textContent = fmtTime(audio.currentTime);
+        }
+      };
+
+      const onEnded = () => {
+        if (currentVoiceUI === ui) {
+          btn.innerHTML = playIcon;
+          voiceWrap.classList.remove("voice--playing");
+          progressFill.style.width = "100%";
+        }
+      };
+
+      audio.addEventListener("loadedmetadata", onLoadedMetadata);
+      audio.addEventListener("timeupdate", onTimeUpdate);
+      audio.addEventListener("ended", onEnded);
 
       // Click progress bar to seek
       progress.addEventListener("click", (ev) => {
-        if (!audio.duration) return;
-        const rect = progress.getBoundingClientRect();
-        const ratio = (ev.clientX - rect.left) / rect.width;
-        audio.currentTime = ratio * audio.duration;
+        if (currentVoiceUI === ui && audio.duration) {
+          const rect = progress.getBoundingClientRect();
+          const ratio = (ev.clientX - rect.left) / rect.width;
+          audio.currentTime = ratio * audio.duration;
+        }
       });
 
+      // Play button click handler
       btn.addEventListener("click", async () => {
         try {
+          // Load this message's audio if not already loaded
+          if (currentVoiceUI !== ui) {
+            loadAudioForMessage(voiceWrap, audioBase64, ui);
+          }
+
           if (audio.paused) {
             await audio.play();
             btn.innerHTML = pauseIcon;
@@ -328,12 +364,6 @@
           }
         } catch {}
       });
-
-      audio.addEventListener("ended", () => {
-        btn.innerHTML = playIcon;
-        voiceWrap.classList.remove("voice--playing");
-        progressFill.style.width = "100%";
-      }, { once: true });
     }
 
     // ② Toggle button for text
