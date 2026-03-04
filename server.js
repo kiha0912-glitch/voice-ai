@@ -156,6 +156,8 @@ function toV3Tagged(t) {
 }
 
 async function elevenTTS(text) {
+  // 越水 -> こしみず に強制置換（TTS読み方確保）
+  text = String(text || "").replace(/越水/g, "こしみず");
   const tagged = toV3Tagged(text);
 
   const url =
