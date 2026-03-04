@@ -62,13 +62,7 @@
   });
   updateCount();
 
-  // Enter to submit (Shift+Enter for newline)
-  q.addEventListener("keydown", (ev) => {
-    if (ev.key === "Enter" && !ev.shiftKey) {
-      ev.preventDefault();
-      form.requestSubmit();
-    }
-  });
+  // ボタン押下のみで送信（Enterキーでの自動送信は無効）
 
   // ===== Connection pill =====
   function setConn(text, ok) {
