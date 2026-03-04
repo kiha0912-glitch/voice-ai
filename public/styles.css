@@ -30,53 +30,6 @@ body{
   overscroll-behavior:none;
 }
 
-/* ===== Topbar ===== */
-.topbar{
-  max-width:900px;
-  margin:12px auto 0;
-  padding:12px 18px;
-  border:1px solid var(--line);
-  border-radius:999px;
-  background:rgba(255,255,255,.04);
-  backdrop-filter:blur(12px);
-  -webkit-backdrop-filter:blur(12px);
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  box-shadow:var(--shadow);
-}
-.brand{display:flex;align-items:center;gap:10px}
-.brand__icon{
-  width:32px;height:32px;border-radius:10px;
-  border:1px solid rgba(255,255,255,.12);
-  object-fit:cover;
-}
-.brand__text{}
-.brand__title{font-weight:800;font-size:15px;letter-spacing:.02em}
-.brand__sub{color:var(--muted);font-size:12px;margin-top:1px}
-
-.pill{
-  display:inline-flex;
-  align-items:center;gap:5px;
-  padding:6px 12px;
-  border-radius:999px;
-  background:rgba(255,255,255,.06);
-  border:1px solid var(--line);
-  color:var(--muted);
-  font-size:11px;
-  white-space:nowrap;
-}
-.pill__dot{
-  width:6px;height:6px;border-radius:999px;
-  background:var(--muted);
-}
-.pill--ok .pill__dot{background:var(--ok)}
-.pill--ok{
-  color:var(--ok);
-  border-color:rgba(66,211,146,.35);
-  background:rgba(66,211,146,.10);
-}
-
 /* ===== Hero Banner ===== */
 .hero-banner{
   max-width:900px;
