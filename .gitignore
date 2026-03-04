@@ -2,8 +2,15 @@ node_modules/
 .env
 .env.local
 out.mp3
-server_old.js
 *.bak
+*.bak2
+*.bak_rootfix2
+.DS_Store
 
 # local backups
 backups/
+
+# old files
+index_old.html
+headers.txt
+server.js.before_improve

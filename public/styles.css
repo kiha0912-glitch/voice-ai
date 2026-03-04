@@ -250,13 +250,13 @@ body{
 }
 
 .msg__avatar{
-  width:44px;
-  height:44px;
+  width:34px;
+  height:34px;
   border-radius:999px;
   overflow:hidden;
   border:1px solid rgba(255,255,255,.14);
   background:rgba(0,0,0,.18);
-  flex:0 0 44px;
+  flex:0 0 34px;
 }
 .msg__avatar img{
   width:100%;
