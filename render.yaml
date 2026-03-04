@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: voice-ai
+    runtime: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: OPENAI_API_KEY
+        sync: false          # Render管理画面で手動設定
+      - key: ELEVEN_API_KEY
+        sync: false
+      - key: ELEVEN_VOICE_ID
+        sync: false
+      - key: ELEVEN_MODEL_ID
+        value: eleven_v3
+      - key: OPENAI_MODEL
+        value: gpt-4.1-mini
+      - key: NODE_ENV
+        value: production

@@ -2,94 +2,118 @@
 <html lang="ja">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>AI越水はるかβ版</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <meta name="theme-color" content="#071221" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>AI越水はるか</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
+
+  <!-- ===== Topbar ===== -->
   <div class="topbar">
-    <div class="topbar__left">
-      <div class="brand">
+    <div class="brand">
+      <img class="brand__icon" src="/haruka-icon.png" alt="" />
+      <div class="brand__text">
         <div class="brand__title">AI越水はるか</div>
-        <div class="brand__sub">越水 はるか（監修）</div>
+        <div class="brand__sub">リーガルサポートAI</div>
       </div>
     </div>
-    <div class="topbar__right">
-      <span id="connPill" class="pill">接続確認中…</span>
-    </div>
+    <span id="connPill" class="pill">
+      <span class="pill__dot"></span>
+      接続確認中…
+    </span>
   </div>
 
+  <!-- ===== Main layout ===== -->
   <main class="layout">
+
+    <!-- Profile card (collapsible on mobile) -->
     <aside class="card profile">
-      <div class="profile__row">
-        <img class="profile__img" src="/profile-placeholder.png" alt="監修者" />
-        <div class="profile__meta">
-          <div class="profile__name">越水 はるか</div>
-          <div class="profile__role">弁護士人格AI（監修）</div>
+      <div class="profile__header" id="profileToggle" role="button" tabindex="0">
+        <div class="profile__row">
+          <img class="profile__img" src="/profile-placeholder.png" alt="監修者" />
+          <div class="profile__meta">
+            <div class="profile__name">越水 はるか</div>
+            <div class="profile__role">弁護士（監修）</div>
+          </div>
         </div>
+        <button class="profile__toggle" aria-expanded="false" aria-label="詳細を開く">▼</button>
       </div>
 
-      <p class="profile__desc">
-        本サービスは法律相談を提供するものではなく<br/>
-        法律知識の整理および一般的情報提供を目的としています。
-      </p>
+      <div class="profile__body" id="profileBody">
+        <p class="profile__desc">
+          本サービスは法律相談を提供するものではなく、
+          法律知識の整理および一般的情報提供を目的としています。
+        </p>
 
-      <div class="notice">
-        <div class="notice__title">ご注意（大切）</div>
-        <ul class="notice__list">
-          <li>ここでの回答は一般的な情報であり、個別の法的助言ではありません。</li>
-          <li>具体的な判断は、専門家や公的窓口へ早めに相談してください。
-            実際の意思決定はご自身の責任において行ってください。</li>
-          <li>入力内容は保存しません（ログ保存なし）。</li>
-        </ul>
+        <div class="notice">
+          <div class="notice__title">ご注意</div>
+          <ul class="notice__list">
+            <li>回答は一般的な情報であり、個別の法的助言ではありません。</li>
+            <li>具体的な判断は専門家や公的窓口へご相談ください。</li>
+            <li>入力内容はサーバーに保存しません。</li>
+          </ul>
+        </div>
       </div>
     </aside>
 
+    <!-- Chat section -->
     <section class="card main">
       <div class="main__head">
         <div class="main__title">相談チャット</div>
-        <button id="btnClear" class="btn btn--ghost" type="button">会話をクリア</button>
+        <button id="btnClear" class="btn btn--ghost" type="button">クリア</button>
       </div>
 
       <div id="err" class="error" hidden></div>
 
       <div id="log" class="log" aria-live="polite">
+        <!-- Welcome message -->
         <div class="msg msg--ai">
-  <div class="msg__avatar">
-    <img src="/haruka-icon.png" alt="越水はるか" />
-  </div>
-  <div class="msg__content">
-    <div class="msg__role">越水はるか</div>
-    <div class="msg__body">
-      こんにちは。<br/>
-      AI越水はるかに聞いてみたい内容をご記入ください。
-    </div>
-  </div>
-</div>
-      <form id="form" class="composer">
-        <textarea id="q" class="composer__input" rows="3"
-          placeholder="例）一般的にどこからがパワハラと言われますか？"
-          maxlength="2000" required></textarea>
-
-        <div class="composer__bottom">
-          <div class="composer__count" id="count">0 / 2000</div>
-
-          <div class="composer__actions">
-            <div id="spinner" class="spinner" hidden>
-              <span class="spinner__dot"></span>
-              <span class="spinner__text">回答を生成しています…</span>
+          <div class="msg__avatar">
+            <img src="/haruka-icon.png" alt="越水はるか" />
+          </div>
+          <div class="msg__content">
+            <div class="msg__role">越水はるか</div>
+            <div class="msg__body">
+              こんにちは。越水はるかAIです。<br/>
+              労働問題や日常の法律トラブルについて、一般的な情報をお伝えできます。<br/>
+              お気軽にご質問ください。
             </div>
-            <button class="btn btn--primary" type="submit">相談する</button>
+            <!-- Suggested questions -->
+            <div class="suggestions" id="suggestions">
+              <button class="suggestion-chip" data-q="パワハラの基準を教えてください">パワハラの基準は？</button>
+              <button class="suggestion-chip" data-q="残業代が支払われない場合どうすればいいですか？">残業代の未払い</button>
+              <button class="suggestion-chip" data-q="退職届と退職願の違いを教えてください">退職届と退職願の違い</button>
+            </div>
           </div>
         </div>
-      </form>
+      </div>
 
-      <!-- 音声再生用（UIはチャット内に出す） -->
+      <!-- Audio element (hidden) -->
       <audio id="audio" preload="metadata"></audio>
     </section>
   </main>
 
-  <footer class="footer">© 法律相談AI（越水はるか）</footer>
+  <footer class="footer">© AI越水はるか — 越水法律相談事務所 監修</footer>
+
+  <!-- Composer (fixed bottom) -->
+  <form id="form" class="composer">
+    <div class="composer__row">
+      <textarea id="q" class="composer__input" rows="1"
+        placeholder="相談内容を入力…"
+        maxlength="2000" required></textarea>
+      <button class="composer__send" type="submit" id="btnSend" aria-label="送信">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9z"/></svg>
+      </button>
+    </div>
+    <div class="composer__footer">
+      <span class="composer__count" id="count">0 / 2000</span>
+      <span class="composer__hint">Enter で送信</span>
+    </div>
+  </form>
+
   <script src="/app.js" defer></script>
 </body>
 </html>
