@@ -12,38 +12,7 @@
   const suggestions = $("suggestions");
   const audio = $("audio");
 
-  // Profile collapse (mobile)
-  const profileToggle = $("profileToggle");
-  const profileBody = $("profileBody");
-  const toggleBtn = profileToggle?.querySelector(".profile__toggle");
-
-  function initProfile() {
-    // Desktop: always open. Mobile: collapsed by default.
-    const isMobile = window.innerWidth < 768;
-    if (!isMobile) {
-      profileBody.classList.add("open");
-      if (toggleBtn) toggleBtn.setAttribute("aria-expanded", "true");
-    }
-  }
-
-  profileToggle?.addEventListener("click", () => {
-    const isOpen = profileBody.classList.toggle("open");
-    if (toggleBtn) toggleBtn.setAttribute("aria-expanded", String(isOpen));
-  });
-
-  // Listen for resize to auto-open on desktop
-  let resizeTimer;
-  window.addEventListener("resize", () => {
-    clearTimeout(resizeTimer);
-    resizeTimer = setTimeout(() => {
-      if (window.innerWidth >= 768) {
-        profileBody.classList.add("open");
-        if (toggleBtn) toggleBtn.setAttribute("aria-expanded", "true");
-      }
-    }, 150);
-  });
-
-  initProfile();
+  // Profile: always visible (header removed)
 
   // ===== Auto-resize textarea =====
   function autoResize() {
